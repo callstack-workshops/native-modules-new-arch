@@ -1,163 +1,565 @@
-# Working with Native Modules: Turbo and Nitro
+# Exercise 01: Build a Math module with Turbo Modules
 
-A walkthrough for the four exercises. Switch branches as instructed and follow the steps for the active exercise.
+> Branch: `01-turbo-module`.
+>
+> ```bash
+> git checkout 01-turbo-module
+> ```
+>
+> If you get stuck, the completed solution lives on `solutions/01-turbo-module`.
 
-## Background
+## What you will build
 
-Brief explanation of why React Native needs native modules, what the New Architecture is, what Turbo Modules / Fabric and Nitro each are, and how their mental models differ. Two paragraphs, plus a one-line "when to pick which" summary that mirrors slide 45 of the deck.
+A `Math` Turbo Module exposing `pi` (a constant) and `add(a, b)` (a sync method) on both iOS and Android. By the end of the must-do steps (1 through 5), the Math screen reads `pi = 3.14159...` from native code and computes `add(2, 3) = 5` via a button press, on both platforms.
 
-## Workshop structure
+The stretch steps (6 and 7) extend the module with `fetchScore(userId)` (an async method returning `Promise<number>`) and `onValueChanged` (a typed event emitted from native code that JS subscribes to). Skip these on a first pass if time is tight; they teach the same concepts at greater verbosity. Compare your final state against `solutions/01-turbo-module` and against Exercise 02's matching steps for the most useful diff.
 
-How the four exercises map to the deck's two sections (modules in section 3, views in section 4) and to the two frameworks. Branch list. The must-do vs stretch convention used in module exercises. The solution-tag escape hatch.
+---
 
-## Before you begin
+## Step 1 (must-do): Write the TypeScript spec
 
-Pointer to the README's prerequisites and setup section. Reminder to run Metro in its own terminal. Reminder that switching exercise branches typically requires a clean rebuild on the platform you are running, with a one-line link to the README troubleshooting section. No need to repeat the commands here.
+Codegen generates the native bindings from a TypeScript file. The conventions are: the file lives in your `jsSrcsDir` (we configured ours as `src/specs`), the filename is prefixed with `Native`, and it exports a TurboModule spec.
 
-## Exercise 01: Build a Math module with Turbo Modules
+Create `src/specs/NativeMath.ts`:
 
-> Branch: `01-turbo-module`. Switch to it before starting.
+```typescript
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
 
-### What you will build
+export interface Spec extends TurboModule {
+  getConstants(): { pi: number };
+  add(a: number, b: number): number;
+}
 
-A `Math` native module exposing `pi: number`, `add(a, b): number`, and (in the stretch steps) `fetchScore(userId): Promise<number>` and an `onValueChanged` event. By the end of Step 5 the app reads `pi` and computes `add(2, 3) = 5` from native code on both platforms.
+export default TurboModuleRegistry.getEnforcing<Spec>('Math');
+```
 
-### Step 1 (must-do): Write the TypeScript spec
+Three things worth noticing before you move on.
 
-What a Turbo Module spec is, the `Native*` filename convention, why the spec is the single source of truth, and what `getConstants()` exists for instead of bare `readonly` properties. Reference: deck slide 14.
+The interface is named `Spec` by convention, not `Math`. The string `'Math'` passed to `getEnforcing` is what binds this spec to a native class registered under the same name. The string and the native registration name must match exactly. Typos here produce silent runtime failures rather than compile errors.
 
-### Step 2 (must-do): Configure codegen
+Constants do not get to be plain `readonly` properties on a Turbo Module spec. They live inside `getConstants()`, which is a quirk of how Turbo's codegen generates the C++/JNI bindings. Nitro is more permissive on this front; you will see the difference firsthand in Exercise 02.
 
-How `codegenConfig` in `package.json` tells codegen where to find specs, what the `name`, `type`, `jsSrcsDir` fields do, and what gets generated where on each platform. The "Native prefix" rule. Reference: deck slide 16.
+`getEnforcing` throws at runtime if the native module is not registered. That is exactly what you want during development. The non-enforcing variant `TurboModuleRegistry.get<Spec>('Math')` returns `null` silently, which makes diagnosis harder.
 
-### Step 3 (must-do): Implement the module on iOS
+> Reference: deck slide 14, right panel.
 
-The `RCTNativeMath.h` plus `RCTNativeMath.mm` Obj-C++ pair, what `RCT_EXPORT_MODULE` does, how `getTurboModule:` returns the codegen-generated `NativeMathSpecJSI`. Reference: deck slide 21 (right panel).
+---
 
-### Step 4 (must-do): Implement the module on Android
+## Step 2 (must-do): Configure codegen
 
-The `NativeMathModule.kt` Kotlin class extending the codegen-generated `NativeMathSpec`. The package registration in `MainApplication.kt`. Reference: deck slide 23 (right panel).
+Codegen needs to know where to look for specs and what to call the generated artifacts. Open `package.json` and add a `codegenConfig` section at the top level (sibling of `dependencies`, `scripts`, etc.):
 
-### Step 5 (must-do): Use the module from JavaScript
+```json
+{
+  "name": "NativeModulesTraining",
+  ...
+  "codegenConfig": {
+    "name": "RCTNativeMathSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/specs",
+    "android": {
+      "javaPackageName": "com.nativemodulestraining.math"
+    }
+  }
+}
+```
 
-Importing the spec, calling `add` and reading `pi` from `MathScreen.tsx`. The "everything until here is the bare minimum module" checkpoint.
+Field by field.
 
-> Checkpoint after Step 5: `MathScreen` displays `pi = 3.14159...` and a button that calls `add(2, 3)` and shows `5`. Both platforms.
+`name` is the prefix for generated files: it becomes `RCTNativeMathSpec.h`, `RCTNativeMathSpecJSI.h`, etc. on iOS, and the corresponding interface in Java/Kotlin on Android. The `RCT` prefix is React Native convention; the `Spec` suffix is required.
 
-### Step 6 (stretch): Async methods with Promise resolvers
+`type: "modules"` tells codegen to look only for module specs in this directory. Other valid values are `components` (for Fabric components, used in Exercise 03) and `all` (both, for libraries that ship modules and components together).
 
-Adding `fetchScore(userId): Promise<number>` to the spec. The Obj-C++ resolver/rejecter pattern, the explicit `RCTPromiseResolveBlock` and `RCTPromiseRejectBlock`. Forgetting either one hangs the Promise. The Kotlin equivalent using `Promise` from `com.facebook.react.bridge`. Reference: deck slide 27 (right panel). Why this is a stretch step: it adds significant native code for the same conceptual lesson and can be skipped without breaking earlier work.
+`jsSrcsDir` is where codegen scans for `Native*.ts` files. We use `src/specs` to match where you placed `NativeMath.ts` in Step 1. Change one and you must change the other.
 
-### Step 7 (stretch): Events with EventEmitter
+`android.javaPackageName` is the Java/Kotlin package the generated Android spec interface lives in. Match this to the package you will use for `NativeMathModule.kt` in Step 4. Mismatches here produce import errors that look unrelated to the package name itself.
 
-Declaring a typed `EventEmitter<number>` in the spec, calling `emitOnValueChanged` from inside `add`, subscribing to it from JS. Reference: deck slide 29 (right panel).
+To trigger codegen and see what it produces (useful for debugging):
 
-> Final checkpoint: `MathScreen` shows `pi`, has buttons for `add` and `fetchScore`, and live-updates a counter as `onValueChanged` events arrive.
+```bash
+cd ios && bundle exec pod install && cd ..
+```
 
-## Exercise 02: Build the same Math module with Nitro
+iOS codegen runs as part of `pod install`. Android codegen runs as part of `gradlew assembleDebug`. The generated output lives in `ios/build/generated/ios/` (look for files starting with `RCTNativeMathSpec`) and `android/app/build/generated/source/codegen/` after a build. You will not edit those generated files; you will implement against the interfaces they declare in Steps 3 and 4.
 
-> Branch: `02-nitro-module`.
+> Reference: deck slide 16, right panel.
 
-### What you will build
+---
 
-The same `Math` interface, but as a Nitro Hybrid Object. The user-facing JS surface is identical to Exercise 01. The diff is entirely in how the native side is authored.
+## Step 3 (must-do): Implement the module on iOS
 
-### Step 1 (must-do): Write the .nitro.ts spec
+A Turbo Module on iOS is two files: a header that declares the class as conforming to the codegen-generated protocol, and an Objective-C++ (`.mm`) implementation. The `.mm` extension is required because Turbo Modules call into C++ for the JSI binding.
 
-The `HybridObject<{ ios: 'swift', android: 'kotlin' }>` extension. Why Nitro can declare `readonly pi: number` directly on the interface rather than through `getConstants()`. The `.nitro.ts` filename convention. Reference: deck slide 14 (left panel).
+Both files go in `ios/NativeModulesTraining/`, alongside `AppDelegate.swift`.
 
-### Step 2 (must-do): Configure nitro.json and run nitrogen
+Create `ios/NativeModulesTraining/RCTNativeMath.h`:
 
-What `nitro.json` declares, the `autolinking` map, what `nitrogen` generates and why those generated files are committed (unlike codegen, which regenerates per app build). Running `npx nitro-codegen` once, eyeballing the output. Reference: deck slide 18 and slide 43.
+```objc
+#import <RCTNativeMathSpec/RCTNativeMathSpec.h>
 
-### Step 3 (must-do): Implement on iOS in Swift
+@interface RCTNativeMath : NSObject <NativeMathSpec>
+@end
+```
 
-`HybridMath.swift` extending the nitrogen-generated `HybridMathSpec`. Why no Obj-C++ shim is needed. Registering the class in the autolinking block, returning a `HybridMath` instance. Reference: deck slide 21 (left panel).
+The protocol `NativeMathSpec` is generated by codegen from your TS spec. The header lives at `<RCTNativeMathSpec/RCTNativeMathSpec.h>` because the `name` field in your `codegenConfig` was `RCTNativeMathSpec`. Mismatches between those two strings produce header-not-found errors.
 
-### Step 4 (must-do): Implement on Android in Kotlin
+Create `ios/NativeModulesTraining/RCTNativeMath.mm`:
 
-`HybridMath.kt` extending the nitrogen-generated `HybridMathSpec()`. The JNI layer that nitrogen handles for you. Calling `initializeNative()` from your `Package` class. Reference: deck slide 23 (left panel).
+```objc
+#import "RCTNativeMath.h"
 
-### Step 5 (must-do): Use the module from JavaScript
+using namespace facebook::react;
 
-`NitroModules.createHybridObject<Math>('Math')` in `MathScreen.tsx`. The fact that Nitro returns a class instance, not a singleton, and what that means for multi-instance use cases.
+@implementation RCTNativeMath
 
-> Checkpoint after Step 5: same external behaviour as Exercise 01 Step 5. Compare your spec, your iOS file, and your Android file against Exercise 01's equivalents. The diff is the lesson.
+RCT_EXPORT_MODULE(Math)
 
-### Step 6 (stretch): Async methods with throws -> Promise<T>
+- (NSDictionary *)getConstants {
+  return @{@"pi": @(M_PI)};
+}
 
-`func fetchScore(userId: String) throws -> Promise<Int>` in Swift, using `Promise.async { try await ... }` with `Task.sleep`. The Kotlin equivalent using `Promise.async { delay(...) }` from coroutines. Compare with Exercise 01 Step 6's resolver/rejecter blocks. Reference: deck slide 27 (left panel).
+- (NSNumber *)add:(double)a b:(double)b {
+  return @(a + b);
+}
 
-### Step 7 (stretch): First-class JS callbacks
+- (std::shared_ptr<TurboModule>)
+    getTurboModule:(const ObjCTurboModule::InitParams &)params {
+  return std::make_shared<NativeMathSpecJSI>(params);
+}
 
-Declaring `startWork(onProgress: (progress: number) => void): void` in the spec. Why Nitro accepts JS functions as native arguments without an event abstraction. Calling the callback from inside a coroutine. Reference: deck slide 29 (left panel).
+@end
+```
 
-> Final checkpoint: same UI behaviour as Exercise 01's final checkpoint. Compare both branches side-by-side to internalise where Turbo and Nitro converge and where they diverge.
+Three things worth noticing.
 
-## Exercise 03: Build a MapView component with Fabric
+`RCT_EXPORT_MODULE(Math)` registers this class under the name `"Math"`. That string must match the one you passed to `getEnforcing<Spec>('Math')` in Step 1. If they drift, the JS side gets `null` from the registry and your method calls throw at runtime with an unhelpful error.
 
-> Branch: `03-turbo-component`. This exercise introduces a new Android dependency, MapLibre Native, on this branch only.
+`getTurboModule:` is what makes this a Turbo Module rather than a legacy Native Module. It returns a shared pointer to a JSI binding (`NativeMathSpecJSI`) that codegen generated from your TS spec. You will not edit `NativeMathSpecJSI` directly; it lives in `ios/build/generated/ios/`, regenerated on every `pod install`.
 
-### What you will build
+The method signatures (`add:b:`, `getConstants`) follow Objective-C naming: the parameter labels become part of the selector. Codegen knows to map TypeScript's `add(a, b)` to Obj-C's `add:b:`, but if you ever rename a method in the spec, you must update both the protocol header import and the implementation here.
 
-A `<MapView region={...} onRegionChange={...} />` component. iOS wraps `MKMapView` from MapKit. Android wraps MapLibre's `MapView`. Both expose `region` as a typed prop and emit `onRegionChange` when the user pans the map.
+Adding the files to Xcode: open `ios/NativeModulesTraining.xcworkspace`, drag both files from Finder into the `NativeModulesTraining` group in the Project Navigator. When prompted, ensure "Copy items if needed" is unchecked and the `NativeModulesTraining` target is checked. If you skip this step, Xcode will not compile your files and the module registration will silently never happen.
 
-### Step 1 (must-do): Add MapLibre to the Android Gradle build
+> Reference: deck slide 21, right panel.
 
-Adding `org.maplibre.gl:android-sdk:11.11.0` to `android/app/build.gradle`. Why we are using MapLibre instead of Google Maps: no API key, no billing, real third-party native SDK. iOS needs nothing extra because MapKit is built in.
+---
 
-### Step 2 (must-do): Write the Fabric component spec
+## Step 4 (must-do): Implement the module on Android
 
-The `MapViewNativeComponent.ts` filename convention. Declaring the `region` prop type and the `onRegionChange` event. Reference: implicit in deck slides 35, 37 (right panels).
+A Turbo Module on Android is three pieces: a Kotlin class implementing the codegen-generated spec, a `ReactPackage` class that exposes it to React Native, and one line added to `MainApplication.kt` to register the package.
 
-### Step 3 (must-do): Implement the iOS view
+Create `android/app/src/main/java/com/nativemodulestraining/math/NativeMathModule.kt`:
 
-`RCTMapView.h` and `RCTMapView.mm` extending `RCTViewComponentView`. The `componentDescriptorProvider` boilerplate. The `updateProps:oldProps:` pattern for receiving prop updates. Wiring `onRegionChange` to the `MKMapView` delegate. Reference: deck slide 35 (right panel).
+```kotlin
+package com.nativemodulestraining.math
 
-### Step 4 (must-do): Implement the Android view
+import com.facebook.react.bridge.ReactApplicationContext
 
-`MapViewManager.kt` extending `SimpleViewManager<MapView>` plus the codegen-generated `MapViewManagerInterface`. The lifecycle forwarding helper that 00-guidance ships (`MapLifecycleBridge.kt`); explanation of what it does and why students do not need to write it. Wiring `onRegionChange` to MapLibre's camera-change listener. Reference: deck slide 37 (right panel).
+class NativeMathModule(reactContext: ReactApplicationContext) :
+    NativeMathSpec(reactContext) {
 
-### Step 5 (must-do): Use the component from JavaScript
+  override fun getName(): String = NAME
 
-Rendering `<MapView region={...} onRegionChange={...}>` in `MapScreen.tsx`. State-driven region updates. Logging `onRegionChange` events.
+  override fun add(a: Double, b: Double): Double = a + b
 
-> Checkpoint: a working map renders on both platforms, panning emits events, parent state can drive the visible region.
+  override fun getConstants(): Map<String, Any> = mapOf("pi" to Math.PI)
 
-## Exercise 04: Build the same MapView with Nitro HybridView
+  companion object {
+    const val NAME = "Math"
+  }
+}
+```
 
-> Branch: `04-nitro-component`.
+`NativeMathSpec` is the abstract class generated by codegen, in the package you set as `android.javaPackageName` in Step 2 (`com.nativemodulestraining.math`). Your concrete class must extend it, override every abstract method, and provide a constant `NAME` that matches the registration string used by both the JS spec and the package class below.
 
-### What you will build
+`Math.PI` here refers to `kotlin.math.PI` (or `java.lang.Math.PI`), not your Math module. The compiler resolves it correctly because you have not imported any other `Math`.
 
-The same JS-facing `<MapView>` API, implemented as a Nitro HybridView.
+Create `android/app/src/main/java/com/nativemodulestraining/math/MathPackage.kt`:
 
-### Step 1 (must-do): Update nitro.json and write the .nitro.ts view spec
+```kotlin
+package com.nativemodulestraining.math
 
-The `HybridView<Props, Methods>` extension. The autolinking entry that ties the spec to the Swift and Kotlin classes. Running nitrogen.
+import com.facebook.react.BaseReactPackage
+import com.facebook.react.bridge.NativeModule
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.module.model.ReactModuleInfo
+import com.facebook.react.module.model.ReactModuleInfoProvider
 
-### Step 2 (must-do): Implement HybridMapView in Swift
+class MathPackage : BaseReactPackage() {
 
-Extending nitrogen-generated `HybridMapViewSpec`. The `view: UIView` accessor (the required handle to the underlying native view). Each prop as a stored `var` with `didSet` that pushes into `MKMapView`. Event props as nullable function fields. Reference: deck slide 35 (left panel).
+  override fun getModule(
+    name: String,
+    reactContext: ReactApplicationContext
+  ): NativeModule? {
+    return if (name == NativeMathModule.NAME) {
+      NativeMathModule(reactContext)
+    } else {
+      null
+    }
+  }
 
-### Step 3 (must-do): Implement HybridMapView in Kotlin
+  override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
+    return ReactModuleInfoProvider {
+      mapOf(
+        NativeMathModule.NAME to ReactModuleInfo(
+          NativeMathModule.NAME,
+          NativeMathModule::class.java.name,
+          false, // canOverrideExistingModule
+          false, // needsEagerInit
+          false, // isCxxModule
+          true   // isTurboModule
+        )
+      )
+    }
+  }
+}
+```
 
-Extending nitrogen-generated `HybridMapViewSpec()`. `override val view: View = mapView`. Prop overrides with custom setters that drive MapLibre. Same `MapLifecycleBridge` helper as Exercise 03. Reference: corrected version of deck slide 37 (left panel) per the slide-bug discussion.
+`BaseReactPackage` is the modern parent class (replaces `TurboReactPackage`, which still works but is being phased out). Two methods to implement: `getModule` returns instances by name, and `getReactModuleInfoProvider` returns metadata that React Native uses to lazy-instantiate modules. The booleans on `ReactModuleInfo` are positional and easy to get wrong; the comments in the snippet tell you what each one means.
 
-### Step 4 (must-do): Use the component from JavaScript
+Finally, register the package in `android/app/src/main/java/com/nativemodulestraining/MainApplication.kt`. Find the `getPackages()` method and add your `MathPackage()`:
 
-`getHostComponent` to obtain the view, `callback()` wrapper for event props. The pattern that differs from a plain Fabric component on the JS side.
+```kotlin
+override fun getPackages(): List<ReactPackage> =
+    PackageList(this).packages.apply {
+      add(MathPackage())
+    }
+```
 
-> Checkpoint: same map UI as Exercise 03, implemented through the Nitro authoring path. Side-by-side comparison with Exercise 03 illustrates the framework diff.
+The `PackageList(this).packages` call returns the autolinked packages from your installed npm dependencies. Adding `MathPackage()` after that gives you everything autolinked plus your local module. Add the matching import at the top of the file:
 
-## Appendix A: Real HTTP fetchScore
+```kotlin
+import com.nativemodulestraining.math.MathPackage
+```
 
-The simulated `Task.sleep` and `delay` versions in Steps 6 of Exercises 01 and 02 are stand-ins for any async work. This appendix shows the same `fetchScore` rewritten with `URLSession` (Swift), `HttpURLConnection` plus `Dispatchers.IO` (Kotlin), and equivalent JSON parsing on each platform. Use these in production; the simulated versions in the exercises are workshop-room friendly.
+Without that registration line, your module compiles fine but never appears in the Turbo Module registry, and JS calls return `null`. This is the single most common Android-side bug when adding a new module.
 
-## Appendix B: Pin reasons and the maintenance contract
+> Reference: deck slide 23, right panel.
 
-Reference to `MAINTENANCE.md` for the trainer-facing list of pinned dependencies and the conditions under which each pin can be removed.
+---
 
-## Resources
+## Step 5 (must-do): Use the module from JavaScript
 
-Same list as the README.
+Edit `src/screens/MathScreen.tsx` to replace the placeholder content with calls into your module.
+
+```tsx
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import NativeMath from '../specs/NativeMath';
+
+export function MathScreen() {
+  const { pi } = NativeMath.getConstants();
+  const [sum, setSum] = useState<number | null>(null);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
+      <Text style={styles.label}>
+        add(2, 3) = {sum === null ? 'press the button' : sum}
+      </Text>
+      <Pressable style={styles.button} onPress={() => setSum(NativeMath.add(2, 3))}>
+        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
+  label: { fontSize: 18 },
+  button: { backgroundColor: '#0A84FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
+});
+```
+
+The import is named `NativeMath` rather than `Math` because importing as `Math` shadows the global `Math` constructor in this file. The deck slides use `Math` for brevity; we recommend non-shadowing names in real code.
+
+`NativeMath.getConstants()` returns the dictionary your iOS and Android implementations declared. `NativeMath.add(2, 3)` invokes the native method through JSI synchronously and returns `5`. Both calls round-trip through your native code.
+
+> Checkpoint after Step 5: rebuild the app on both platforms (`npx react-native run-ios --simulator="iPhone 16"` and `npx react-native run-android`). The Math screen should display `pi from native = 3.141593` and the button should populate `add(2, 3) = 5`. If the screen shows `pi = 0` or the button does nothing, the most likely cause is that the native side is not registered: check `RCT_EXPORT_MODULE(Math)` on iOS and the `MathPackage()` entry in `MainApplication.kt` on Android.
+
+> Reference: deck slide 25, right panel.
+
+---
+
+## Step 6 (stretch): Async methods with Promise resolvers
+
+Add a `fetchScore(userId)` method that returns a `Promise<number>`. The point of this step is the authoring difference, not the network call itself; we simulate the work with a one-second delay rather than a real HTTP request, to keep the workshop deterministic and offline-friendly. See Appendix A for the production-ready URLSession / HttpURLConnection variant.
+
+### Update the TS spec
+
+Edit `src/specs/NativeMath.ts` to add `fetchScore` to the interface:
+
+```typescript
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
+
+export interface Spec extends TurboModule {
+  getConstants(): { pi: number };
+  add(a: number, b: number): number;
+  fetchScore(userId: string): Promise<number>;
+}
+
+export default TurboModuleRegistry.getEnforcing<Spec>('Math');
+```
+
+After this change, regenerate the native bindings by running `bundle exec pod install` from the `ios/` directory. Codegen reruns automatically on the next Android build. The generated `NativeMathSpec` (Android) and `NativeMathSpec` Obj-C protocol (iOS) now declare the new method, and your concrete implementations will fail to compile until you implement it.
+
+### Implement on iOS
+
+The codegen-generated method signature is `void`-returning with explicit resolver and rejecter blocks; this is how Turbo Modules surface JS Promises to the native side.
+
+Edit `ios/NativeModulesTraining/RCTNativeMath.mm` to add:
+
+```objc
+- (void)fetchScore:(NSString *)userId
+           resolve:(RCTPromiseResolveBlock)resolve
+            reject:(RCTPromiseRejectBlock)reject {
+  if (userId.length == 0) {
+    reject(@"empty_user_id", @"userId cannot be empty", nil);
+    return;
+  }
+
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)),
+                 dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+    NSInteger score = arc4random_uniform(101);
+    resolve(@(score));
+  });
+}
+```
+
+The resolver and rejecter blocks come from React Native's bridge headers (`RCTBridgeModule.h`, transitively imported via your spec header). They are mutually exclusive: call exactly one, exactly once. If you forget to call either, the JS Promise hangs forever with no error. If you call both, the second call is a no-op but might log a warning. The non-error rejection arguments are `code`, `message`, and an optional `NSError`; pass `nil` for the latter when the error did not originate from a Cocoa API.
+
+`dispatch_after` simulates a 1-second async delay, dispatched to the global concurrent queue so the resolver is not blocking the calling thread. `arc4random_uniform(101)` returns a uniformly distributed integer in `[0, 100]`.
+
+### Implement on Android
+
+The Kotlin signature for an async method takes a `Promise` parameter; resolve or reject it from a background thread.
+
+Edit `android/app/src/main/java/com/nativemodulestraining/math/NativeMathModule.kt` to add:
+
+```kotlin
+import android.os.Handler
+import android.os.Looper
+import com.facebook.react.bridge.Promise
+
+// inside class NativeMathModule, after add():
+
+override fun fetchScore(userId: String, promise: Promise) {
+  if (userId.isEmpty()) {
+    promise.reject("empty_user_id", "userId cannot be empty")
+    return
+  }
+
+  Handler(Looper.getMainLooper()).postDelayed({
+    val score = (0..100).random()
+    promise.resolve(score)
+  }, 1000L)
+}
+```
+
+`Promise` is `com.facebook.react.bridge.Promise`. Same contract as iOS: call `resolve` or `reject` exactly once. Forgetting to call either hangs the JS Promise.
+
+`Handler(Looper.getMainLooper()).postDelayed` schedules the callback for delivery 1 second from now. For a workshop demo this is fine, but it is worth flagging as workshop-only: it ties your async work to the main looper, which is the wrong pattern for any work that takes meaningful time. In production code you would use Kotlin coroutines with a class-scoped `CoroutineScope` or a `ScheduledExecutorService` from a class-scoped pool, plus cancel them in `invalidate()`.
+
+### Use it from JavaScript
+
+Update `src/screens/MathScreen.tsx` to add a button that calls `fetchScore` and displays the result:
+
+```tsx
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import NativeMath from '../specs/NativeMath';
+
+export function MathScreen() {
+  const { pi } = NativeMath.getConstants();
+  const [sum, setSum] = useState<number | null>(null);
+  const [score, setScore] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFetchScore = async () => {
+    setLoading(true);
+    try {
+      const result = await NativeMath.fetchScore('user-123');
+      setScore(result);
+    } catch (err) {
+      console.error('fetchScore failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
+      <Text style={styles.label}>
+        add(2, 3) = {sum === null ? 'press the button' : sum}
+      </Text>
+      <Pressable style={styles.button} onPress={() => setSum(NativeMath.add(2, 3))}>
+        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
+      </Pressable>
+
+      <Text style={styles.label}>
+        score = {loading ? 'loading...' : score === null ? 'press the button' : score}
+      </Text>
+      <Pressable style={styles.button} onPress={handleFetchScore} disabled={loading}>
+        <Text style={styles.buttonLabel}>Fetch score</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
+  label: { fontSize: 18 },
+  button: { backgroundColor: '#0A84FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
+});
+```
+
+> Checkpoint after Step 6: rebuild on both platforms. Press "Fetch score". After roughly one second, a number between 0 and 100 appears. The "loading..." label confirms the call is async and not blocking the UI thread.
+
+> Reference: deck slide 27, right panel.
+
+---
+
+## Step 7 (stretch): Events with typed EventEmitter
+
+Add an `onValueChanged` event that fires from native code every time `add` is called, and have the JS side subscribe to it. Codegen handles the event-emitter wiring once you declare the field in the spec.
+
+### Update the TS spec
+
+Edit `src/specs/NativeMath.ts` to add the event emitter field:
+
+```typescript
+import type { TurboModule } from 'react-native';
+import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
+import { TurboModuleRegistry } from 'react-native';
+
+export interface Spec extends TurboModule {
+  getConstants(): { pi: number };
+  add(a: number, b: number): number;
+  fetchScore(userId: string): Promise<number>;
+  readonly onValueChanged: EventEmitter<number>;
+}
+
+export default TurboModuleRegistry.getEnforcing<Spec>('Math');
+```
+
+The `EventEmitter<number>` type tells codegen the event payload is a single number. Codegen generates a typed emitter on the native side (`emitOnValueChanged(_:)` on iOS, `emitOnValueChanged(value: Double)` on Android) and a typed subscription helper on the JS side. The type parameter flows all the way through; mismatches between native emit and JS subscribe surface at compile time on both ends.
+
+Run `bundle exec pod install` from `ios/` again to regenerate the iOS bindings.
+
+### Emit from iOS
+
+Edit `ios/NativeModulesTraining/RCTNativeMath.mm` to call the generated emitter from inside `add`:
+
+```objc
+- (NSNumber *)add:(double)a b:(double)b {
+  NSNumber *result = @(a + b);
+  [self emitOnValueChanged:result];
+  return result;
+}
+```
+
+The `emitOnValueChanged:` selector is generated by codegen onto the abstract spec your class conforms to. You do not declare it; you just call it. The argument type matches what you declared in the TS spec (`number` becomes `NSNumber *` here).
+
+### Emit from Android
+
+Edit `android/app/src/main/java/com/nativemodulestraining/math/NativeMathModule.kt`:
+
+```kotlin
+override fun add(a: Double, b: Double): Double {
+  val result = a + b
+  emitOnValueChanged(result)
+  return result
+}
+```
+
+`emitOnValueChanged(value: Double)` is generated on the abstract `NativeMathSpec` class. Same pattern as iOS: declare in the spec, codegen produces the emitter, your implementation just calls it.
+
+### Subscribe from JavaScript
+
+Update `src/screens/MathScreen.tsx` to subscribe to `onValueChanged` and display the latest emitted value. Add the `useEffect` for subscription management plus a piece of state for the latest value:
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import NativeMath from '../specs/NativeMath';
+
+export function MathScreen() {
+  const { pi } = NativeMath.getConstants();
+  const [sum, setSum] = useState<number | null>(null);
+  const [score, setScore] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [latestEmitted, setLatestEmitted] = useState<number | null>(null);
+
+  useEffect(() => {
+    const subscription = NativeMath.onValueChanged((value) => {
+      setLatestEmitted(value);
+    });
+    return () => subscription.remove();
+  }, []);
+
+  const handleFetchScore = async () => {
+    setLoading(true);
+    try {
+      const result = await NativeMath.fetchScore('user-123');
+      setScore(result);
+    } catch (err) {
+      console.error('fetchScore failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
+      <Text style={styles.label}>
+        add(2, 3) = {sum === null ? 'press the button' : sum}
+      </Text>
+      <Pressable style={styles.button} onPress={() => setSum(NativeMath.add(2, 3))}>
+        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
+      </Pressable>
+
+      <Text style={styles.label}>
+        score = {loading ? 'loading...' : score === null ? 'press the button' : score}
+      </Text>
+      <Pressable style={styles.button} onPress={handleFetchScore} disabled={loading}>
+        <Text style={styles.buttonLabel}>Fetch score</Text>
+      </Pressable>
+
+      <Text style={styles.label}>
+        last emitted value = {latestEmitted === null ? 'no events yet' : latestEmitted}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
+  label: { fontSize: 18 },
+  button: { backgroundColor: '#0A84FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
+});
+```
+
+`NativeMath.onValueChanged(handler)` returns a subscription object with a `remove()` method. Returning the cleanup from the `useEffect` ensures the subscription is removed when the component unmounts; without it, the subscription leaks on every navigation away from the Math tab and accumulates if you mount the screen multiple times.
+
+> Final checkpoint: rebuild both platforms. The Math screen now shows pi, an `add(2, 3)` button that fills in `sum` AND updates the "last emitted value" line, a "Fetch score" button with the async loading state, and the live event subscription. Each press of `add` updates two numbers (the immediate return value and the event-driven state). Compare your Exercise 01 final state against `solutions/01-turbo-module` for any drift.
+
+> Reference: deck slide 29, right panel.
+
+---
+
+## Compare with Exercise 02
+
+When you finish this exercise, switch to `02-nitro-module` and notice three things:
+
+1. The TS spec extends `HybridObject<{ ios: 'swift', android: 'kotlin' }>` instead of `TurboModule`, and `pi` becomes a bare `readonly pi: number` rather than living inside `getConstants()`.
+2. The iOS implementation is pure Swift (no Obj-C++, no `.mm`, no resolver/rejecter blocks for async). Async methods use `throws -> Promise<T>` with `Promise.async { try await ... }`.
+3. The Android implementation is pure Kotlin extending `HybridMathSpec()` directly, with no separate `Package` class to register. Nitrogen handles the JNI layer.
+
+Those three differences are the diff between Turbo and Nitro at the module level. The view-level diff (Exercises 03 and 04) is similar in spirit but applied to native UI instead of native logic.
