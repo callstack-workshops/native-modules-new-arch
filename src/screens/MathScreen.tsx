@@ -1,13 +1,23 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import NativeMath from '../specs/NativeMath';
 
 export function MathScreen() {
+  const { pi } = NativeMath.getConstants();
+  const [sum, setSum] = useState<number | null>(null);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Math</Text>
-      <Text style={styles.hint}>
-        Native module exercises land here in later steps.
+      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
+      <Text style={styles.label}>
+        add(2, 3) = {sum === null ? 'press the button' : sum}
       </Text>
+      <Pressable
+        style={styles.button}
+        onPress={() => setSum(NativeMath.add(2, 3))}
+      >
+        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
+      </Pressable>
     </View>
   );
 }
@@ -18,7 +28,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
+    gap: 16,
   },
-  title: { fontSize: 24, fontWeight: '600', marginBottom: 8 },
-  hint: { fontSize: 14, opacity: 0.6, textAlign: 'center' },
+  label: { fontSize: 18 },
+  button: {
+    backgroundColor: '#0A84FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
