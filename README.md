@@ -1,97 +1,97 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Working with Native Modules: Turbo and Nitro
 
-# Getting Started
+A hands-on workshop for building React Native native modules and native components on the New Architecture, using both Turbo Modules / Fabric and the Nitro frameworks.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+The workshop is structured around four exercises that each build the same surface (a `Math` module and a `MapView` component) in both frameworks, so the diff between Turbo and Nitro is the lesson.
 
-## Step 1: Start Metro
+## Agenda
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+The full walkthrough for every exercise lives in [GUIDANCE.md](./GUIDANCE.md). Each exercise is its own branch off `00-guidance`:
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+1. `01-turbo-module`: build the `Math` module with Turbo Modules (codegen, Obj-C++ on iOS, Kotlin on Android, sync + async + events).
+2. `02-nitro-module`: build the same `Math` module with Nitro (nitrogen, Swift on iOS, Kotlin on Android, sync + async + first-class callbacks).
+3. `03-turbo-component`: build a `MapView` component with Fabric (`RCTViewComponentView` on iOS, `SimpleViewManager` on Android, MKMapView and MapLibre under the hood).
+4. `04-nitro-component`: build the same `MapView` with Nitro HybridView (Swift on iOS, Kotlin on Android).
 
-```sh
-# Using npm
+If you get stuck on any exercise, every exercise has a matching solution tag you can check out:
+
+```bash
+git checkout solutions/01-turbo-module
+```
+
+Return to your in-progress branch with \`git checkout 01-turbo-module\`.
+
+## Prerequisites
+
+- Node 20 or newer
+- Xcode 16 or newer (tested on Xcode 26)
+- Ruby 3.2+ with Bundler 2.7+
+- CocoaPods 1.16+
+- Android Studio with JDK 17 and Android SDK 34
+- A configured iOS Simulator (iPhone 16 recommended) and Android Emulator
+
+## Setup
+
+```bash
+git clone https://github.com/callstack-workshops/native-modules-new-arch.git
+cd native-modules-new-arch
+npm install
+cd ios && bundle install && bundle exec pod install && cd ..
+```
+
+## Running the app
+
+Run Metro in its own terminal:
+
+```bash
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
+Then in a second terminal, pick a platform:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+npx react-native run-ios --simulator="iPhone 16"
+# or
+npx react-native run-android
 ```
 
-### iOS
+The explicit `--simulator` flag prevents `run-ios` from targeting a connected physical iPhone, which fails on a fresh clone because no signing team is configured.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## Troubleshooting
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+The most common issue when switching branches is a stale native binary that does not match the current branch's native code or pods. If you see overlays like "Unimplemented component" or unexplained crashes on launch, do a clean rebuild on the affected platform.
 
-```sh
-bundle install
+iOS:
+
+```bash
+rm -rf ~/Library/Developer/Xcode/DerivedData
+cd ios && rm -rf build Pods Podfile.lock && bundle exec pod install && cd ..
+npx react-native start --reset-cache
+npx react-native run-ios --simulator="iPhone 16"
 ```
 
-Then, and every time you update your native dependencies, run:
+Android:
 
-```sh
-bundle exec pod install
+```bash
+cd android && ./gradlew clean && cd ..
+npx react-native start --reset-cache
+npx react-native run-android
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Pinned dependencies and known issues
 
-```sh
-# Using npm
-npm run ios
+This repo pins certain native dependencies and configures Xcode to work around current ecosystem regressions:
 
-# OR using Yarn
-yarn ios
-```
+- `react-native-screens` is pinned to `4.23.0`. Versions `4.24.0` and newer have a New Architecture regression on iOS (see [software-mansion/react-native-screens#3682](https://github.com/software-mansion/react-native-screens/issues/3682)).
+- The iOS Podfile sets `SWIFT_ENABLE_EXPLICIT_MODULES=NO` for all pod targets to work around a Swift module compilation issue with Xcode 26.
+- `.npmrc` sets `save-exact=true` so every future `npm install foo` writes a hard pin.
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+See [MAINTENANCE.md](./MAINTENANCE.md) for the condition under which each pin can be removed.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## Resources
 
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- [Nitro Modules documentation](https://nitro.margelo.com/)
+- [React Native New Architecture documentation](https://reactnative.dev/docs/the-new-architecture/landing-page)
+- [react-native-vision-camera](https://github.com/mrousavy/react-native-vision-camera): real-world Nitro module example
+- [react-native-mmkv](https://github.com/mrousavy/react-native-mmkv): real-world Nitro module example
+- The slide deck this workshop is based on: TBD link
