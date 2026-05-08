@@ -116,4 +116,6 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation("org.maplibre.gl:android-sdk:11.11.0")
 }
