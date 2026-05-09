@@ -1,6 +1,6 @@
 # Exercise 01: Build a Math module with Turbo Modules
 
-> Stay on the `00-guidance` branch and complete the steps below in your own working tree. Each task has a collapsible **Solution** you can expand if you get stuck. The `01-turbo-module` branch shows the finished implementation as a read-only reference; do not check it out, just diff against it if you want to compare your final state.
+> Reset your working tree to the `scaffold-v1` tag (`git reset --hard scaffold-v1`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `01-turbo-module` branch (the same branch this README is on); once you finish, run `git diff 01-turbo-module` to see how your final state compares.
 
 ## What you will build
 
