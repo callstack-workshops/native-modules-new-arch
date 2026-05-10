@@ -45,10 +45,15 @@
   },
   "codegenConfig": {
     "name": "RCTNativeMathSpec",
-    "type": "modules",
+    "type": "all",
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.nativemodulestraining.math"
+    },
+    "ios": {
+      "componentProvider": {
+        "MapView": "RCTMapView"
+      }
     }
   },
   "engines": {
