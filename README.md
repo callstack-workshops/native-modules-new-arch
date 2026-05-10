@@ -2,9 +2,11 @@
 
 > Reset your working tree to the `scaffold-v1` tag (`git reset --hard scaffold-v1`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `01-turbo-module` branch (the same branch this README is on); once you finish, run `git diff 01-turbo-module` to see how your final state compares.
 
+This exercise uses the shared `Card` component at `src/components/Card.tsx` and icons from `lucide-react-native`, both included in `scaffold-v1`. If you are starting from a fresh clone and either is missing, copy the Card component from the `02-nitro-module` branch (`git show 02-nitro-module:src/components/Card.tsx > src/components/Card.tsx`) and install lucide (`npm install lucide-react-native`).
+
 ## What you will build
 
-A `Math` Turbo Module exposing `pi` (a constant) and `add(a, b)` (a sync method) on both iOS and Android. By the end of the must-do steps (1 through 5), the Math screen reads `pi = 3.14159...` from native code and computes `add(2, 3) = 5` via a button press, on both platforms.
+A `Math` Turbo Module exposing `pi` (a constant) and `add(a, b)` (a sync method) on both iOS and Android. By the end of the must-do steps (1 through 5), the Math screen reads `pi = 3.14159...` from native code and computes `add(2, 3) = 5` via a button press, on both platforms, rendered with a polished Card-based UI.
 
 The stretch steps (6 and 7) extend the module with `fetchScore(userId)` (an async method returning `Promise<number>`) and `onValueChanged` (a typed event emitted from native code that JS subscribes to). Skip these on a first pass if time is tight; they teach the same concepts at greater verbosity. Compare your final state against the `01-turbo-module` branch and against Exercise 02's matching steps for the most useful diff.
 
@@ -337,43 +339,86 @@ Without that registration line, your module compiles fine but never appears in t
 
 ## Step 5 (must-do): Use the module from JavaScript
 
-Edit `src/screens/MathScreen.tsx` to replace the placeholder content with calls into your module. Start with this skeleton:
+With the module compiled and registered on both platforms, render it through the same Card-based UI used in Exercise 02. The screen will use the shared `Card` component from `src/components/Card.tsx` and icons from `lucide-react-native`.
+
+Edit `src/screens/MathScreen.tsx` and replace the placeholder content with this skeleton:
 
 ```tsx
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import { Pi, Plus } from 'lucide-react-native';
 import NativeMath from '../specs/NativeMath';
+import { Card } from '../components/Card';
 
 export function MathScreen() {
-  // TODO 5.1
+  // TODO 5.1: read pi from NativeMath
   const pi = 0;
 
   const [sum, setSum] = useState<number | null>(null);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
-      <Text style={styles.label}>
-        add(2, 3) = {sum === null ? 'press the button' : sum}
-      </Text>
-      <Pressable
-        style={styles.button}
-        // TODO 5.2
-        onPress={() => {}}
-      >
-        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
-      </Pressable>
-    </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Math</Text>
+        <Text style={styles.subtitle}>Turbo Module on the New Architecture</Text>
+      </View>
+
+      <Card icon={Pi} label="Constant" kind="getConstants()">
+        <Text style={styles.value}>{pi.toFixed(6)}</Text>
+        <Text style={styles.caption}>Read once when the module loads.</Text>
+      </Card>
+
+      <Card icon={Plus} label="Sync method" kind="add(a, b)">
+        <Text style={styles.value}>
+          {sum === null ? 'press Run to compute' : `add(2, 3) = ${sum}`}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
+          // TODO 5.2: invoke NativeMath.add(2, 3) and store the result
+          onPress={() => {}}
+        >
+          <Text style={styles.buttonLabel}>Run</Text>
+        </Pressable>
+      </Card>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
-  label: { fontSize: 18 },
-  button: { backgroundColor: '#0A84FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  container: { flex: 1, backgroundColor: '#F2F2F7' },
+  content: { padding: 16, gap: 12 },
+  header: { paddingVertical: 12, paddingHorizontal: 4, gap: 4 },
+  title: { fontSize: 28, fontWeight: '700', color: '#1C1C1E' },
+  subtitle: { fontSize: 14, color: '#8E8E93' },
+  value: { fontSize: 18, fontWeight: '600', color: '#1C1C1E' },
+  caption: { fontSize: 13, color: '#8E8E93' },
+  button: {
+    backgroundColor: '#0A84FF',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 38,
+    alignSelf: 'flex-start',
+    minWidth: 100,
+  },
+  buttonPressed: { backgroundColor: '#0066CC' },
+  buttonDisabled: { backgroundColor: '#A0A0A5' },
+  buttonLabel: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
 });
 ```
+
+The `buttonDisabled` style is included up front because it will be used in Steps 6 and 7 (loading and event-receiving states); leaving it in saves you from editing the styles dictionary later.
 
 ### Task 5.1
 
@@ -405,7 +450,9 @@ The import is named `NativeMath` rather than `Math` because importing as `Math` 
 
 `NativeMath.getConstants()` returns the dictionary your iOS and Android implementations declared. `NativeMath.add(2, 3)` invokes the native method through JSI synchronously and returns `5`. Both calls round-trip through your native code.
 
-> Checkpoint after Step 5: rebuild the app on both platforms (`npx react-native run-ios --simulator="iPhone 16"` and `npx react-native run-android`). The Math screen should display `pi from native = 3.141593` and the button should populate `add(2, 3) = 5`. If the screen shows `pi = 0` or the button does nothing, the most likely cause is that the native side is not registered: check `RCT_EXPORT_MODULE(Math)` on iOS and the `MathPackage()` entry in `MainApplication.kt` on Android.
+The `Card` component's `icon`, `label`, and `kind` props are the same shape used in Exercise 02; you are sharing the same component. The visual parallelism is the whole point: when you put the Math and Math (Nitro) tabs side by side later, the only meaningful differences are the API surface details (`getConstants()` vs property access, etc.).
+
+> Checkpoint after Step 5: rebuild the app on both platforms (`npx react-native run-ios --simulator="iPhone 16"` and `npx react-native run-android`). The Math screen should display the header "Math" / "Turbo Module on the New Architecture", the Constant card showing `3.141593`, and pressing Run on the Sync method card populates `add(2, 3) = 5`. If the screen shows `pi = 0` or the button does nothing, the most likely cause is that the native side is not registered: check `RCT_EXPORT_MODULE(Math)` on iOS and the `MathPackage()` entry in `MainApplication.kt` on Android.
 
 > Reference: deck slide 25, right panel.
 
@@ -413,7 +460,7 @@ The import is named `NativeMath` rather than `Math` because importing as `Math` 
 
 ## Step 6 (stretch): Async methods with Promise resolvers
 
-Add a `fetchScore(userId)` method that returns a `Promise<number>`. The point of this step is the authoring difference, not the network call itself; we simulate the work with a one-second delay rather than a real HTTP request, to keep the workshop deterministic and offline-friendly. See Appendix A for the production-ready URLSession / HttpURLConnection variant.
+Add a `fetchScore(userId)` method that returns a `Promise<number>`, plus a third Card to display its loading state and result. The point of this step is the authoring difference, not the network call itself; we simulate the work with a one-second delay rather than a real HTTP request, to keep the workshop deterministic and offline-friendly.
 
 ### Update the TS spec
 
@@ -531,56 +578,34 @@ Implement `fetchScore`:
 
 `Handler(Looper.getMainLooper()).postDelayed` schedules the callback for delivery 1 second from now. For a workshop demo this is fine, but it is worth flagging as workshop-only: it ties your async work to the main looper, which is the wrong pattern for any work that takes meaningful time. In production code you would use Kotlin coroutines with a class-scoped `CoroutineScope` or a `ScheduledExecutorService` from a class-scoped pool, plus cancel them in `invalidate()`.
 
-### Use it from JavaScript
+### Add the Async method Card to the screen
 
-Update `src/screens/MathScreen.tsx` to add a Fetch score button alongside the existing pi display and add button. Start with this evolved skeleton:
+Update `src/screens/MathScreen.tsx` to import the `Activity` icon and `ActivityIndicator`, add async state and a handler, and render a third `Card`. The diff against Step 5's screen:
 
 ```tsx
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import NativeMath from '../specs/NativeMath';
-
-export function MathScreen() {
-  const { pi } = NativeMath.getConstants();
-  const [sum, setSum] = useState<number | null>(null);
-
-  // TODO 6.4: add `score` and `loading` state, and a `handleFetchScore` async handler
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
-      <Text style={styles.label}>
-        add(2, 3) = {sum === null ? 'press the button' : sum}
-      </Text>
-      <Pressable style={styles.button} onPress={() => setSum(NativeMath.add(2, 3))}>
-        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
-      </Pressable>
-
-      {/* TODO 6.4: add a Text showing the score, and a Pressable that calls handleFetchScore */}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
-  label: { fontSize: 18 },
-  button: { backgroundColor: '#0A84FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,  // add this
+} from 'react-native';
+import { Pi, Plus, Activity } from 'lucide-react-native';  // add Activity
 ```
 
 ### Task 6.4
 
-Add async state and a Fetch score button. You need:
+Add async state, an async handler, and render a third Card. Specifically:
 
-- `score` and `loading` state (both nullable / boolean as appropriate)
-- An async `handleFetchScore` that sets `loading`, awaits `NativeMath.fetchScore('user-123')`, stores the result, and clears `loading` in a `finally`
-- A new `Text` showing the score (with a "loading..." placeholder while in flight) and a `Pressable` wired to `handleFetchScore` (disabled while loading)
+- `score` and `loading` state
+- `handleFetchScore` async handler that sets `loading`, awaits `NativeMath.fetchScore('user-123')`, stores the result, and clears `loading` in a `finally`
+- A new `Card` (`icon={Activity}`, `label="Async method"`, `kind="fetchScore(userId)"`) showing the score and a Fetch Pressable that uses an `ActivityIndicator` while loading
 
 <details>
 <summary><kbd>Show solution</kbd></summary>
 
-Add the state and handler at the top of the component:
+State and handler (add inside the component, after the `sum` state):
 
 ```tsx
   const [score, setScore] = useState<number | null>(null);
@@ -599,20 +624,38 @@ Add the state and handler at the top of the component:
   };
 ```
 
-Add the new JSX inside the outer `View`, after the existing add Pressable:
+JSX (add inside the `ScrollView`, after the existing Sync method Card):
 
 ```tsx
-      <Text style={styles.label}>
-        score = {loading ? 'loading...' : score === null ? 'press the button' : score}
-      </Text>
-      <Pressable style={styles.button} onPress={handleFetchScore} disabled={loading}>
-        <Text style={styles.buttonLabel}>Fetch score</Text>
-      </Pressable>
+      <Card icon={Activity} label="Async method" kind="fetchScore(userId)">
+        <Text style={styles.value}>
+          {loading
+            ? 'loading...'
+            : score === null
+            ? 'press Fetch'
+            : `score = ${score}`}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+            loading && styles.buttonDisabled,
+          ]}
+          onPress={handleFetchScore}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.buttonLabel}>Fetch</Text>
+          )}
+        </Pressable>
+      </Card>
 ```
 
 </details>
 
-> Checkpoint after Step 6: rebuild on both platforms. Press "Fetch score". After roughly one second, a number between 0 and 100 appears. The "loading..." label confirms the call is async and not blocking the UI thread.
+> Checkpoint after Step 6: rebuild on both platforms. The Math screen now has three Cards. Press Fetch on the Async method card; after roughly one second, a number appears. The button shows an `ActivityIndicator` while in flight, confirming the call is async and not blocking the UI thread.
 
 > Reference: deck slide 27, right panel.
 
@@ -620,7 +663,7 @@ Add the new JSX inside the outer `View`, after the existing add Pressable:
 
 ## Step 7 (stretch): Events with typed EventEmitter
 
-Add an `onValueChanged` event that fires from native code every time `add` is called, and have the JS side subscribe to it. Codegen handles the event-emitter wiring once you declare the field in the spec.
+Add an `onValueChanged` event that fires from native code every time `add` is called, plus a fourth Card that subscribes to it and displays the latest emitted value. Codegen handles the event-emitter wiring once you declare the field in the spec.
 
 ### Update the TS spec
 
@@ -714,89 +757,62 @@ Call the codegen-generated emitter to fire `onValueChanged` with `result` as the
 
 `emitOnValueChanged(value: Double)` is generated on the abstract `NativeMathSpec` class. Same pattern as iOS: declare in the spec, codegen produces the emitter, your implementation just calls it.
 
-### Subscribe from JavaScript
+### Add the Event Card to the screen
 
-Update `src/screens/MathScreen.tsx` to subscribe to `onValueChanged` and display the latest emitted value. Start with this evolved skeleton:
+Update `src/screens/MathScreen.tsx` to import the `Bell` icon and `useEffect`, subscribe to the event, and render a fourth `Card`:
 
 ```tsx
-import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import NativeMath from '../specs/NativeMath';
-
-export function MathScreen() {
-  const { pi } = NativeMath.getConstants();
-  const [sum, setSum] = useState<number | null>(null);
-  const [score, setScore] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [latestEmitted, setLatestEmitted] = useState<number | null>(null);
-
-  // TODO 7.4: subscribe to NativeMath.onValueChanged in a useEffect, and unsubscribe on cleanup
-
-  const handleFetchScore = async () => {
-    setLoading(true);
-    try {
-      const result = await NativeMath.fetchScore('user-123');
-      setScore(result);
-    } catch (err) {
-      console.error('fetchScore failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.label}>pi from native = {pi.toFixed(6)}</Text>
-      <Text style={styles.label}>
-        add(2, 3) = {sum === null ? 'press the button' : sum}
-      </Text>
-      <Pressable style={styles.button} onPress={() => setSum(NativeMath.add(2, 3))}>
-        <Text style={styles.buttonLabel}>Compute add(2, 3)</Text>
-      </Pressable>
-
-      <Text style={styles.label}>
-        score = {loading ? 'loading...' : score === null ? 'press the button' : score}
-      </Text>
-      <Pressable style={styles.button} onPress={handleFetchScore} disabled={loading}>
-        <Text style={styles.buttonLabel}>Fetch score</Text>
-      </Pressable>
-
-      <Text style={styles.label}>
-        last emitted value = {latestEmitted === null ? 'no events yet' : latestEmitted}
-      </Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
-  label: { fontSize: 18 },
-  button: { backgroundColor: '#0A84FF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
+import React, { useState, useEffect } from 'react';  // add useEffect
+// ...
+import { Pi, Plus, Activity, Bell } from 'lucide-react-native';  // add Bell
 ```
 
 ### Task 7.4
 
-In a `useEffect`, subscribe to `NativeMath.onValueChanged`, store the emitted value via `setLatestEmitted`, and return a cleanup function that removes the subscription. Use an empty dependency array so it runs once on mount.
+Add subscription state and a fourth Card. Specifically:
+
+- `latestEmitted` state (`number | null`) and `eventCount` state (`number`)
+- A `useEffect` that subscribes to `NativeMath.onValueChanged`, updates both states when the event fires, and returns a cleanup function that removes the subscription. Use an empty dependency array so it runs once on mount.
+- A new `Card` (`icon={Bell}`, `label="Event"`, `kind="onValueChanged"`) showing the latest emitted value and the running event count
 
 <details>
 <summary><kbd>Show solution</kbd></summary>
 
+State and effect (add after the existing async handler):
+
 ```tsx
+  const [latestEmitted, setLatestEmitted] = useState<number | null>(null);
+  const [eventCount, setEventCount] = useState(0);
+
   useEffect(() => {
     const subscription = NativeMath.onValueChanged((value) => {
       setLatestEmitted(value);
+      setEventCount((prev) => prev + 1);
     });
     return () => subscription.remove();
   }, []);
+```
+
+JSX (add inside the `ScrollView`, after the Async method Card):
+
+```tsx
+      <Card icon={Bell} label="Event" kind="onValueChanged">
+        <Text style={styles.value}>
+          {latestEmitted === null
+            ? 'no events yet'
+            : `last value: ${latestEmitted}`}
+        </Text>
+        <Text style={styles.caption}>
+          {eventCount} event{eventCount === 1 ? '' : 's'} received
+        </Text>
+      </Card>
 ```
 
 </details>
 
 `NativeMath.onValueChanged(handler)` returns a subscription object with a `remove()` method. Returning the cleanup from the `useEffect` ensures the subscription is removed when the component unmounts; without it, the subscription leaks on every navigation away from the Math tab and accumulates if you mount the screen multiple times.
 
-> Final checkpoint: rebuild both platforms. The Math screen now shows pi, an `add(2, 3)` button that fills in `sum` AND updates the "last emitted value" line, a "Fetch score" button with the async loading state, and the live event subscription. Each press of `add` updates two numbers (the immediate return value and the event-driven state). Compare your Exercise 01 final state against the `01-turbo-module` branch for any drift.
+> Final checkpoint: rebuild on both platforms. The Math screen now has four Cards: pi, add (which now updates two numbers when pressed because the emitter fires), fetch with loading state, and the live event subscription showing latest value plus running count. Each press of `add` updates two numbers (the immediate return value AND the event count). Compare your Exercise 01 final state against the `01-turbo-module` branch for any drift.
 
 > Reference: deck slide 29, right panel.
 
@@ -808,6 +824,8 @@ When you finish this exercise, switch to `02-nitro-module` and notice three thin
 
 1. The TS spec extends `HybridObject<{ ios: 'swift', android: 'kotlin' }>` instead of `TurboModule`, and `pi` becomes a bare `readonly pi: number` rather than living inside `getConstants()`.
 2. The iOS implementation is pure Swift (no Obj-C++, no `.mm`, no resolver/rejecter blocks for async). Async methods use `throws -> Promise<T>` with `Promise.async { try await ... }`.
-3. The Android implementation is pure Kotlin extending `HybridMathSpec()` directly, with no separate `Package` class to register. Nitrogen handles the JNI layer.
+3. The Android implementation is pure Kotlin extending `HybridMathSpec()` directly, packaged as a separate library at `packages/nitro-math/` rather than living in the host app. Nitrogen handles most of the JNI layer; the small piece you have to write yourself (the `cpp-adapter.cpp` JNI_OnLoad and the load-order package) is documented step by step in Exercise 02's Step 4.
 
 Those three differences are the diff between Turbo and Nitro at the module level. The view-level diff (Exercises 03 and 04) is similar in spirit but applied to native UI instead of native logic.
+
+Visually, the Math and Math (Nitro) screens are deliberately identical in shell. Each Card on one tab corresponds to a Card on the other; the icon and `kind` text changes are the lesson. Read both `MathScreen.tsx` and `NitroMathScreen.tsx` side by side for the most concrete sense of the diff.
