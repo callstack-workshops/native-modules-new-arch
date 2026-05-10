@@ -140,14 +140,6 @@ cd ios && rm -rf build Pods Podfile.lock && bundle exec pod install && cd ..
 
 Do NOT run `rm -rf ios/build` without the `pod install` immediately afterwards. That deletes codegen output and the next build fails on missing generated files.
 
-## Pinned dependencies and known issues
-
-This repo pins certain native dependencies and configures Xcode to work around current ecosystem regressions:
-
-- `react-native-screens` is pinned to `4.23.0`. Versions `4.24.0` and newer have a New Architecture regression on iOS (see [software-mansion/react-native-screens#3682](https://github.com/software-mansion/react-native-screens/issues/3682)).
-- The iOS Podfile sets `SWIFT_ENABLE_EXPLICIT_MODULES=NO` for all pod targets to work around a Swift module compilation issue with Xcode 26.
-- `.npmrc` sets `save-exact=true` so every future `npm install foo` writes a hard pin.
-
 ## Resources
 
 - [Nitro Modules documentation](https://nitro.margelo.com/)
