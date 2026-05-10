@@ -41,6 +41,19 @@
     "react-test-renderer": "19.2.3",
     "typescript": "^5.8.3"
   },
+  "codegenConfig": {
+    "name": "RCTNativeMathSpec",
+    "type": "all",
+    "jsSrcsDir": "src/specs",
+    "android": {
+      "javaPackageName": "com.nativemodulestraining.math"
+    },
+    "ios": {
+      "componentProvider": {
+        "MapView": "RCTMapView"
+      }
+    }
+  },
   "engines": {
     "node": ">= 22.11.0"
   }
