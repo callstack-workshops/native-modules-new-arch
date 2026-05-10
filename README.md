@@ -10,8 +10,8 @@ The workshop is structured around four exercises that each build the same surfac
 |-----------------------------------------------------------------------------------------------------|---------------------------------------------|---|
 | [01](https://github.com/callstack-workshops/native-modules-new-arch/blob/01-turbo-module/README.md) | Math module with Turbo Modules              | `01-turbo-module` |
 | [02](https://github.com/callstack-workshops/native-modules-new-arch/blob/02-nitro-module/README.md) | Math module with Nitro Modules              | `02-nitro-module` |
-| [03](https://github.com/callstack-workshops/native-modules-new-arch/blob/03-turbo-component/README.md) | MapView with Turbo Components (coming soon) | `03-turbo-component` |
-| [04](https://github.com/callstack-workshops/native-modules-new-arch/blob/04-nitro-component/README.md) | MapView with Nitro Components (coming soon) | `04-nitro-component` |
+| [03](https://github.com/callstack-workshops/native-modules-new-arch/blob/03-turbo-component/README.md) | MapView with Turbo Components | `03-turbo-component` |
+| [04](https://github.com/callstack-workshops/native-modules-new-arch/blob/04-nitro-component/README.md) | MapView with Nitro Components | `04-nitro-component` |
 
 Each exercise lives on its own branch. The branch contains only that exercise's implementation in isolation, plus a README walkthrough that tells the story of how the code was built. Every step poses a task, gives you a code skeleton with a `// TODO` marker, and provides a collapsible **Show solution** you can expand if you get stuck or want to verify your approach.
 
