@@ -61,7 +61,7 @@ npm start
 Then in a second terminal, pick a platform:
 
 ```bash
-npx react-native run-ios --simulator="iPhone 16"
+npx react-native run-ios
 # or
 npx react-native run-android
 ```
