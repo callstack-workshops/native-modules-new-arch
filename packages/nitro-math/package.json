@@ -1,0 +1,26 @@
+{
+  "name": "nitro-math",
+  "version": "0.0.1",
+  "description": "Workshop local Nitro Math module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "android",
+    "ios",
+    "nitrogen",
+    "*.podspec",
+    "nitro.json"
+  ],
+  "scripts": {
+    "nitrogen": "nitrogen"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": "*"
+  },
+  "devDependencies": {
+    "nitrogen": "0.35.6"
+  }
+}

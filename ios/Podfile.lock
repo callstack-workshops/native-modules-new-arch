@@ -3,6 +3,31 @@ PODS:
   - hermes-engine (250829098.0.10):
     - hermes-engine/Pre-built (= 250829098.0.10)
   - hermes-engine/Pre-built (250829098.0.10)
+  - NitroMath (0.0.1):
+    - NitroModules
+  - NitroModules (0.35.6):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RCTDeprecation (0.85.3)
   - RCTRequired (0.85.3)
   - RCTSwiftUI (0.85.3)
@@ -1953,6 +1978,8 @@ PODS:
 DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - NitroMath (from `../node_modules/nitro-math`)
+  - NitroModules (from `../node_modules/react-native-nitro-modules`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTSwiftUI (from `../node_modules/react-native/ReactApple/RCTSwiftUI`)
@@ -2036,6 +2063,10 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-v250829098.0.10
+  NitroMath:
+    :path: "../node_modules/nitro-math"
+  NitroModules:
+    :path: "../node_modules/react-native-nitro-modules"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2190,6 +2221,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
   hermes-engine: bfb8b4e370ec4682ab1136fe47e5250fd56d2b2f
+  NitroMath: 0ff915ca1ae2c66c3643301ca9aad4a8d11969ea
+  NitroModules: c41b7b778d6557f1e517a80ec681a670321fa001
   RCTDeprecation: a4c521821fab57cbb125b36effe84d897d0dfa12
   RCTRequired: 9f3a7e5645d4bc3f551593de7550bb66ab6e42bc
   RCTSwiftUI: 239ed2eb9e73de5a6f518810630f0c95e01c8702
@@ -2259,7 +2292,7 @@ SPEC CHECKSUMS:
   React-utils: ccc01da318979af773259c4f6cdb1876f6f86f1a
   React-webperformancenativemodule: f8b97c2cb6cfa94e92a503c09ad6d491c50a1390
   ReactAppDependencyProvider: 25c9c516839be2c5e3d3344f95dc7da5f7e63fc2
-  ReactCodegen: c8f81e6c6f762dcf442a6203a1fb58f7dafc8014
+  ReactCodegen: 5d47bf0ee403a8da9a253d309c7d0acea74a68b3
   ReactCommon: 7dfc3250793bf36cf221096ff59e1179e13eef7f
   ReactNativeDependencies: 568fb9ad3e8bf87a770756fa2fd827b7cdb24586
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
