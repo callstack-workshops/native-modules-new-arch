@@ -1,8 +1,8 @@
 # Exercise 03: Build a MapView with Fabric Components
 
-> Reset your working tree to the `scaffold-v1` tag (`git reset --hard scaffold-v1`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `03-turbo-component` branch (the same branch this README is on); once you finish, run `git diff 03-turbo-component` to see how your final state compares.
+> Reset your working tree to the `scaffold` tag (`git reset --hard scaffold`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `03-turbo-component` branch (the same branch this README is on); once you finish, run `git diff 03-turbo-component` to see how your final state compares.
 
-This exercise builds on the Map plumbing already in `scaffold-v1`: `android/app/src/main/java/com/nativemodulestraining/maps/MapLibreInitializer.kt` (thread-safe MapLibre init) and `MapLifecycleBridge.kt` (proxies React Native host lifecycle into the MapView's onStart/onResume/onPause/onStop/onDestroy). You do not need to learn MapLibre's lifecycle quirks; the workshop authors handled that so you can focus on the Fabric authoring story. On iOS we use Apple's `MKMapView` directly, no third-party dependency, no API key, no lifecycle bridge needed.
+This exercise builds on the Map plumbing already in `scaffold`: `android/app/src/main/java/com/nativemodulestraining/maps/MapLibreInitializer.kt` (thread-safe MapLibre init) and `MapLifecycleBridge.kt` (proxies React Native host lifecycle into the MapView's onStart/onResume/onPause/onStop/onDestroy). You do not need to learn MapLibre's lifecycle quirks; the workshop authors handled that so you can focus on the Fabric authoring story. On iOS we use Apple's `MKMapView` directly, no third-party dependency, no API key, no lifecycle bridge needed.
 
 ## What you will build
 
@@ -18,7 +18,7 @@ Exercise 02 forced a library-shaped layout because Nitro's tooling assumes libra
 
 ## Step 1 (must-do): Configure codegen
 
-The `scaffold-v1` tag predates any codegen setup, so you need to add a `codegenConfig` block to `package.json` from scratch. (If you have done Exercise 01 first, the block is already there from that exercise's Step 2; one field needs to change. See the note at the end of this step.)
+The `scaffold` tag predates any codegen setup, so you need to add a `codegenConfig` block to `package.json` from scratch. (If you have done Exercise 01 first, the block is already there from that exercise's Step 2; one field needs to change. See the note at the end of this step.)
 
 ### Task 1.1
 
