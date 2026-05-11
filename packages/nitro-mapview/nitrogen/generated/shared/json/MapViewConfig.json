@@ -1,0 +1,11 @@
+{
+  "uiViewClassName": "MapView",
+  "supportsRawText": false,
+  "bubblingEventTypes": {},
+  "directEventTypes": {},
+  "validAttributes": {
+    "region": true,
+    "onRegionChange": true,
+    "hybridRef": true
+  }
+}

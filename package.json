@@ -14,6 +14,7 @@
     "@react-navigation/bottom-tabs": "^7.15.13",
     "@react-navigation/native": "^7.2.4",
     "lucide-react-native": "1.14.0",
+    "nitro-mapview": "file:./packages/nitro-mapview",
     "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-safe-area-context": "5.7.0",
@@ -37,9 +38,11 @@
     "@types/react-test-renderer": "^19.1.0",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
+    "nitrogen": "0.35.6",
     "prettier": "2.8.8",
     "react-test-renderer": "19.2.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "react-native-nitro-modules": "0.35.6"
   },
   "engines": {
     "node": ">= 22.11.0"
