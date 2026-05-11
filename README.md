@@ -889,4 +889,4 @@ Once both exercises are complete, switch between `03-turbo-component` and `04-ni
 
 4. **Visual identity.** Both Map screens render identically (modulo the Android initial-region quirk). The framework choice is invisible to the user — and that is the lesson. The choice is about authoring ergonomics and version requirements, not user-facing behavior.
 
-When you compare these in the integrated `00-guidance` branch (after Exercise 04 is integrated), the two Map tabs are deliberately near-identical screens; the only difference is the framework label in the header subtitle. Read both screens and the two view-implementation files side by side for the most concrete sense of the diff between Fabric and Nitro view authoring.
+When you compare these in the integrated `00-final-app` branch (after Exercise 04 is integrated), the two Map tabs are deliberately near-identical screens; the only difference is the framework label in the header subtitle. Read both screens and the two view-implementation files side by side for the most concrete sense of the diff between Fabric and Nitro view authoring.
