@@ -1,8 +1,8 @@
 # Exercise 02: Build a Math module with Nitro Modules
 
-> Reset your working tree to the `scaffold-v1` tag (`git reset --hard scaffold-v1`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `02-nitro-module` branch (the same branch this README is on); once you finish, run `git diff 02-nitro-module` to see how your final state compares.
+> Reset your working tree to the `scaffold` tag (`git reset --hard scaffold`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `02-nitro-module` branch (the same branch this README is on); once you finish, run `git diff 02-nitro-module` to see how your final state compares.
 
-This exercise uses the shared `Card` component at `src/components/Card.tsx` and icons from `lucide-react-native`, both included in `scaffold-v1`. If you are starting from a fresh clone and either is missing, copy the Card component from the `01-turbo-module` branch (`git show 01-turbo-module:src/components/Card.tsx > src/components/Card.tsx`) and install lucide (`npm install lucide-react-native`).
+This exercise uses the shared `Card` component at `src/components/Card.tsx` and icons from `lucide-react-native`, both included in `scaffold`. If you are starting from a fresh clone and either is missing, copy the Card component from the `01-turbo-module` branch (`git show 01-turbo-module:src/components/Card.tsx > src/components/Card.tsx`) and install lucide (`npm install lucide-react-native`).
 
 ## What you will build
 
