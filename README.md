@@ -17,15 +17,15 @@ Each exercise lives on its own branch. The branch contains only that exercise's 
 
 ## How this repository is organized
 
-The default branch (`00-guidance`) contains the integrated final product: all four exercises completed and running together in the same app. Cloning the default branch and running the app gives you a working build with every module and component the workshop covers.
+The default branch (`00-final-app`) contains the integrated final product: all four exercises completed and running together in the same app. Cloning the default branch and running the app gives you a working build with every module and component the workshop covers.
 
-The pristine pre-exercise scaffold state of the repository is preserved at the `scaffold-v1` git tag. If you want to start the workshop from a clean slate locally, `git reset --hard scaffold-v1` puts your working tree at the same state students see at the beginning of the workshop.
+The pristine pre-exercise scaffold state of the repository is preserved at the `scaffold` git tag. If you want to start the workshop from a clean slate locally, `git reset --hard scaffold` puts your working tree at the same state students see at the beginning of the workshop.
 
 ## Recommended workflow
 
 If you are working through the exercises self-paced, the easiest path is:
 
-1. Clone the repo and reset to `scaffold-v1` (`git reset --hard scaffold-v1` after cloning).
+1. Clone the repo and reset to `00-final-app` (`git reset --hard scaffold` after cloning).
 2. Open the README on the exercise branch you want to work on (in the GitHub UI, or via `git show 01-turbo-module:README.md`).
 3. Follow the walkthrough, trying each task before expanding the solution.
 4. When you finish, compare your tree against the exercise branch with `git diff 01-turbo-module`.
