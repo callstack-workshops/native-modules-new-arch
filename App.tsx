@@ -2,12 +2,17 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Calculator, Map as MapIcon, Info, Sigma } from 'lucide-react-native';
+import {
+  Calculator,
+  Map as MapIcon,
+  Sigma,
+  MapPin,
+} from 'lucide-react-native';
 
 import { MathScreen } from './src/screens/MathScreen';
 import { MapScreen } from './src/screens/MapScreen';
-import { AboutScreen } from './src/screens/AboutScreen';
 import { NitroMathScreen } from './src/screens/NitroMathScreen';
+import { NitroMapScreen } from './src/screens/NitroMapScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -49,11 +54,11 @@ export default function App() {
             }}
           />
           <Tab.Screen
-            name="About"
-            component={AboutScreen}
+            name="Map (Nitro)"
+            component={NitroMapScreen}
             options={{
               tabBarIcon: ({ color, size }) => (
-                <Info color={color} size={size} />
+                <MapPin color={color} size={size} />
               ),
             }}
           />

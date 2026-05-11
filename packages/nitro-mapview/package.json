@@ -1,0 +1,19 @@
+{
+  "name": "nitro-mapview",
+  "version": "0.0.1",
+  "main": "src/HybridMapView.nitro.ts",
+  "types": "src/MapView.nitro.ts",
+  "files": [
+    "src",
+    "ios",
+    "android",
+    "nitrogen",
+    "nitro.json",
+    "*.podspec"
+  ],
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": "*"
+  }
+}

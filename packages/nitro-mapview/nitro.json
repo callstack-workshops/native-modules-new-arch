@@ -1,0 +1,22 @@
+{
+  "cxxNamespace": ["nitromapview"],
+  "ios": {
+    "iosModuleName": "NitroMapView"
+  },
+  "android": {
+    "androidNamespace": ["nitromapview"],
+    "androidCxxLibName": "NitroMapView"
+  },
+  "autolinking": {
+    "NitroMapView": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridMapView"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridMapView"
+      }
+    }
+  }
+}

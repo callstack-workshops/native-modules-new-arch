@@ -20,7 +20,8 @@
     "react-native-safe-area-context": "5.7.0",
     "react-native-screens": "^4.24.0",
     "react-native-svg": "15.15.4",
-    "nitro-math": "file:./packages/nitro-math"
+    "nitro-math": "file:./packages/nitro-math",
+    "nitro-mapview": "file:./packages/nitro-mapview"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
