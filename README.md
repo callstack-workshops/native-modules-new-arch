@@ -1,6 +1,6 @@
 # Exercise 04: Build a MapView with Nitro HybridView
 
-> Reset your working tree to the `scaffold-v1` tag (`git reset --hard scaffold-v1`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `04-nitro-component` branch (the same branch this README is on); once you finish, run `git diff 04-nitro-component` to see how your final state compares.
+> Reset your working tree to the `scaffold` tag (`git reset --hard scaffold`) and complete the steps below in your own checkout. Each task has a collapsible **Show solution** you can expand if you get stuck. The completed reference code for this exercise lives on the `04-nitro-component` branch (the same branch this README is on); once you finish, run `git diff 04-nitro-component` to see how your final state compares.
 
 This exercise builds on the same map plumbing Exercise 03 used: `MapLibreInitializer` and `MapLifecycleBridge` from the scaffold's `android/app/.../maps/` package. Exercise 04 vendors a private copy of those two files inside the library so the library is self-contained. iOS uses Apple's `MKMapView` directly, no third-party dependency, no API key.
 
